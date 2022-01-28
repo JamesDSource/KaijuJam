@@ -1,3 +1,3 @@
 BINDIR = '/usr/local/bin'
-LIBDIR = '/usr/local/lib64'
+LIBDIR = '/usr/local/lib'
 PREFIX = '/usr/local'

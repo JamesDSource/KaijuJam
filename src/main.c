@@ -9,13 +9,16 @@ typedef struct {
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
+	int32_t player_x;
+	int32_t player_y;
+
 	bool isRunning;
 }App;
 
 void loop(void* arg) {
 	App app = *(App*)arg;
 	SDL_RenderClear(app.renderer);
-	SDL_Rect dest = {.x = 0, .y = 100, .w = 200, .h = 200};
+	SDL_Rect dest = {.x = app.player_x, .y = app.player_y, .w = 32, .h = 32};
 	SDL_RenderPresent(app.renderer);
 
 	if(!app.isRunning) {
