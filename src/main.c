@@ -10,6 +10,8 @@ const uint32_t LEVEL_HEIGHT = 1280;
 const uint32_t LEVEL_WIDTH = 5120;
 const uint32_t OCEAN_HEIGHT = 180;
 
+const float GRAVITY = 0.1;
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* application_surface;
@@ -26,6 +28,7 @@ bool game_started = false;
 
 int camera_x = LEVEL_WIDTH/2 - SCREEN_RES_W/2, camera_y = LEVEL_HEIGHT/2 - SCREEN_RES_H/2;
 int player_x = LEVEL_WIDTH/2, player_y = LEVEL_HEIGHT/2;
+float player_velocity_x = 0, player_velocity_y = 0;
 SDL_Texture* player_texture;
 
 void loop(void* arg) {
@@ -51,7 +54,6 @@ void loop(void* arg) {
 		}
 	}
 
-	int line_vector_x, line_vector_y;
 	if(game_started) {
 		// Moving the camera twords the player
 		camera_x += (player_x - (camera_x + SCREEN_RES_W/2))/20;
