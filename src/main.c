@@ -1,5 +1,6 @@
 #include"main.h"
 #include"draw.h"
+#include <math.h>
 
 const uint32_t SCREEN_RES_W = 640;
 const uint32_t SCREEN_RES_H = 480;
@@ -26,10 +27,12 @@ int mouse_screen_x, mouse_screen_y;
 bool isRunning = true;
 bool game_started = false;
 
-int camera_x = LEVEL_WIDTH/2 - SCREEN_RES_W/2, camera_y = LEVEL_HEIGHT/2 - SCREEN_RES_H/2;
-int player_x = LEVEL_WIDTH/2, player_y = LEVEL_HEIGHT/2;
-float player_velocity_x = 0, player_velocity_y = 0;
+float camera_x = LEVEL_WIDTH/2.0 - SCREEN_RES_W/2.0, camera_y = LEVEL_HEIGHT/2.0 - SCREEN_RES_H/2.0;
+float player_x = LEVEL_WIDTH/2.0, player_y = LEVEL_HEIGHT/2.0;
+float player_velocity_x = 0, player_velocity_y = 0, player_gravity;
 SDL_Texture* player_texture;
+
+bool left_mouse_down = false;
 
 void loop(void* arg) {
 	static uint64_t t = 0;
@@ -48,6 +51,14 @@ void loop(void* arg) {
 				if(!game_started) {
 					game_started = true;
 				}
+				if(event.button.button == 1) {
+					left_mouse_down = true;
+				}
+				break;
+			case SDL_MOUSEBUTTONUP:
+				if(event.button.button == 1) {
+					left_mouse_down = false;
+				}
 				break;
 			default:
 				break;
@@ -55,13 +66,33 @@ void loop(void* arg) {
 	}
 
 	if(game_started) {
-		// Moving the camera twords the player
-		camera_x += (player_x - (camera_x + SCREEN_RES_W/2))/20;
-		camera_y += (player_y - (camera_y + SCREEN_RES_H/2))/20;
 
 		// Calculate mouse position
-		int mouse_x = mouse_screen_x - camera_x;
-		int mouse_y = mouse_screen_y - camera_y;
+		int mouse_x = mouse_screen_x + camera_x;
+		int mouse_y = mouse_screen_y + camera_y;
+
+		if(left_mouse_down) {
+			float vel_x = mouse_x - player_x;
+			float vel_y = mouse_y - player_y;
+
+			float len = sqrt(vel_x*vel_x + vel_y*vel_y);
+			if(len > 0.0000001) {
+				vel_x /= len;
+				vel_y /= len;
+				player_velocity_x += vel_x/3;
+				player_velocity_y += vel_y/3;
+			}
+		} else {
+			player_velocity_x *= 0.99;
+			player_velocity_y *= 0.99;
+			player_velocity_y += GRAVITY;
+		}
+		player_x += player_velocity_x;
+		player_y += player_velocity_y;
+
+		// Moving the camera twords the player
+		camera_x += (player_x - (camera_x + SCREEN_RES_W/2.0))/5;
+		camera_y += (player_y - (camera_y + SCREEN_RES_H/2.0))/5;
 	}
 
 	// Clamping the camera

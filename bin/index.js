@@ -197,7 +197,7 @@ Module['FS_createPath']("/", "res", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/res/Placeholder.png", "start": 0, "end": 310}, {"filename": "/res/FreePixel.ttf", "start": 310, "end": 65190}], "remote_package_size": 65190, "package_uuid": "43c2eb18-adcc-4416-815d-f003fa0a6e6e"});
+    loadPackage({"files": [{"filename": "/res/Placeholder.png", "start": 0, "end": 310}, {"filename": "/res/FreePixel.ttf", "start": 310, "end": 65190}], "remote_package_size": 65190, "package_uuid": "631e26d4-efc3-451b-a5b5-91c54a13bdad"});
 
   })();
 
@@ -9295,21 +9295,10 @@ var dynCall_ji = Module["dynCall_ji"] = createExportWrapper("dynCall_ji");
 var dynCall_jiji = Module["dynCall_jiji"] = createExportWrapper("dynCall_jiji");
 
 
-function invoke_viiii(index,a1,a2,a3,a4) {
+function invoke_ii(index,a1) {
 var sp = stackSave();
 try {
-  getWasmTableEntry(index)(a1,a2,a3,a4);
-} catch(e) {
-  stackRestore(sp);
-  if (e !== e+0 && e !== 'longjmp') throw e;
-  _setThrew(1, 0);
-}
-}
-
-function invoke_iii(index,a1,a2) {
-var sp = stackSave();
-try {
-  return getWasmTableEntry(index)(a1,a2);
+  return getWasmTableEntry(index)(a1);
 } catch(e) {
   stackRestore(sp);
   if (e !== e+0 && e !== 'longjmp') throw e;
@@ -9350,10 +9339,10 @@ try {
 }
 }
 
-function invoke_ii(index,a1) {
+function invoke_iii(index,a1,a2) {
 var sp = stackSave();
 try {
-  return getWasmTableEntry(index)(a1);
+  return getWasmTableEntry(index)(a1,a2);
 } catch(e) {
   stackRestore(sp);
   if (e !== e+0 && e !== 'longjmp') throw e;
@@ -9420,6 +9409,17 @@ function invoke_i(index) {
 var sp = stackSave();
 try {
   return getWasmTableEntry(index)();
+} catch(e) {
+  stackRestore(sp);
+  if (e !== e+0 && e !== 'longjmp') throw e;
+  _setThrew(1, 0);
+}
+}
+
+function invoke_viiii(index,a1,a2,a3,a4) {
+var sp = stackSave();
+try {
+  getWasmTableEntry(index)(a1,a2,a3,a4);
 } catch(e) {
   stackRestore(sp);
   if (e !== e+0 && e !== 'longjmp') throw e;
