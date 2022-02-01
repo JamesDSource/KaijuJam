@@ -19,8 +19,6 @@ extern const uint32_t LEVEL_HEIGHT;
 extern const uint32_t LEVEL_WIDTH;
 extern const uint32_t OCEAN_HEIGHT;
 
-extern const float GRAVITY;
-
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 extern SDL_Texture* application_surface;
