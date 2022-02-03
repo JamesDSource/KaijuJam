@@ -1,6 +1,8 @@
+#include <math.h>
+
 #include"main.h"
 #include"draw.h"
-#include <math.h>
+#include"plane.h"
 
 const uint32_t SCREEN_RES_W = 640;
 const uint32_t SCREEN_RES_H = 480;
@@ -10,8 +12,6 @@ const uint32_t SCREEN_SIZE_H = 720;
 const uint32_t LEVEL_HEIGHT = 1280;
 const uint32_t LEVEL_WIDTH = 5120;
 const uint32_t OCEAN_HEIGHT = 180;
-
-const float GRAVITY = 0.1;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -27,12 +27,25 @@ int mouse_screen_x, mouse_screen_y;
 bool isRunning = true;
 bool game_started = false;
 
+Planes* planes;
+
 float camera_x = LEVEL_WIDTH/2.0 - SCREEN_RES_W/2.0, camera_y = LEVEL_HEIGHT/2.0 - SCREEN_RES_H/2.0;
-float player_x = LEVEL_WIDTH/2.0, player_y = LEVEL_HEIGHT/2.0;
-float player_velocity_x = 0, player_velocity_y = 0, player_gravity;
+
+uint32_t player_id;
 SDL_Texture* player_texture;
 
 bool left_mouse_down = false;
+
+void draw_planes() {
+	for(uint32_t i = 0; i < planes->count; ++i) {
+		switch(planes->types[i]) {
+			case PLANE_TYPE_PLAYER:
+				;Vec2 pos = planes->positions[i];
+				draw_texture(player_texture, pos.x - camera_x, pos.y - camera_y, "cc", planes->velocities[i].dir, SDL_FLIP_NONE);
+				break;
+		}
+	}
+}
 
 void loop(void* arg) {
 	static uint64_t t = 0;
@@ -66,33 +79,23 @@ void loop(void* arg) {
 	}
 
 	if(game_started) {
-
 		// Calculate mouse position
 		int mouse_x = mouse_screen_x + camera_x;
 		int mouse_y = mouse_screen_y + camera_y;
 
+		uint32_t player_index = plane_get(planes, player_id);
 		if(left_mouse_down) {
-			float vel_x = mouse_x - player_x;
-			float vel_y = mouse_y - player_y;
-
-			float len = sqrt(vel_x*vel_x + vel_y*vel_y);
-			if(len > 0.0000001) {
-				vel_x /= len;
-				vel_y /= len;
-				player_velocity_x += vel_x/3;
-				player_velocity_y += vel_y/3;
-			}
+			planes->flags[player_index] &= ~PLANE_STATUS_NOTHRUST;
 		} else {
-			player_velocity_x *= 0.99;
-			player_velocity_y *= 0.99;
-			player_velocity_y += GRAVITY;
+			planes->flags[player_index] |= PLANE_STATUS_NOTHRUST;
 		}
-		player_x += player_velocity_x;
-		player_y += player_velocity_y;
+
+		planes_move(planes);
 
 		// Moving the camera twords the player
-		camera_x += (player_x - (camera_x + SCREEN_RES_W/2.0))/5;
-		camera_y += (player_y - (camera_y + SCREEN_RES_H/2.0))/5;
+		Vec2 pos = planes->positions[player_index];
+		camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/5;
+		camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/5;
 	}
 
 	// Clamping the camera
@@ -119,14 +122,7 @@ void loop(void* arg) {
 	SDL_SetRenderTarget(renderer, application_surface);
 	SDL_RenderClear(renderer);
 
-	// Drawing the player
-	int draw_player_x = player_x - camera_x;
-	int draw_player_y = player_y - camera_y;
-	if(game_started) {
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-		SDL_RenderDrawLine(renderer, draw_player_x, draw_player_y, mouse_screen_x, mouse_screen_y);
-	}
-	draw_texture(player_texture, draw_player_x, draw_player_y, "cc"); 
+	draw_planes();
 
 	// Drawing the ocean
 	if(camera_y >= LEVEL_HEIGHT - SCREEN_RES_H - OCEAN_HEIGHT) {
@@ -143,7 +139,7 @@ void loop(void* arg) {
 	
 	// Drawing the menu
 	if(!game_started) {
-		draw_text("ATTACK OF THE SKYJ***S", font_lrg, SCREEN_RES_W/2, SCREEN_RES_H/4, "cc", NULL);
+		draw_text("UNTITLED PROJECT", font_lrg, SCREEN_RES_W/2, SCREEN_RES_H/4, "cc", NULL);
 		static bool draw_start = false;
 		if(t % 30 == 0) {
 			draw_start = !draw_start;
@@ -186,7 +182,7 @@ int main() {
 	IMG_Init(IMG_INIT_PNG);
 
 	window = SDL_CreateWindow(
-			"Attack of the Skyj***s", 
+			"UNTITLED PROJECT", 
 			SDL_WINDOWPOS_UNDEFINED, 
 			SDL_WINDOWPOS_UNDEFINED, 
 			SCREEN_SIZE_W,
@@ -201,7 +197,15 @@ int main() {
 		SCREEN_RES_H);
 
 	load_assets();
+
+	planes = planes_init();
+	uint32_t player_index;
+	player_id = plane_add(planes, &player_index);
+	planes->positions[player_index] = (Vec2){camera_x + SCREEN_RES_W/2.0, camera_y + SCREEN_RES_H/2.0};
+	planes->types[player_index] = PLANE_TYPE_PLAYER;
+
 	emscripten_set_main_loop_arg(loop, NULL, 60, 1);
+	planes_free(planes);
 	
 	unload_assets();
 	TTF_Quit();

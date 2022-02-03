@@ -10,7 +10,7 @@
 
 SDL_Texture* load_texture(const char* path);
 
-void draw_texture(SDL_Texture* texture, int x, int y, char align[2]);
+void draw_texture(SDL_Texture* texture, int x, int y, char align[2], float rotation, SDL_RendererFlip flip);
 void draw_text(
 		const char* text,
 		TTF_Font* font,

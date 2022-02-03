@@ -9,7 +9,7 @@ SDL_Texture* load_texture(const char* path) {
 	return tex;
 }
 
-void draw_texture(SDL_Texture* texture, int x, int y, char align[2]) {
+void draw_texture(SDL_Texture* texture, int x, int y, char align[2], float rotation, SDL_RendererFlip flip) {
 	SDL_Rect texture_rect = {
 		.x = x,
 		.y = y
@@ -40,7 +40,7 @@ void draw_texture(SDL_Texture* texture, int x, int y, char align[2]) {
 			break;
 	}
 
-	SDL_RenderCopy(renderer, texture, NULL, &texture_rect);
+	SDL_RenderCopyEx(renderer, texture, NULL, &texture_rect, rotation, NULL, flip);
 }
 
 void draw_text(
