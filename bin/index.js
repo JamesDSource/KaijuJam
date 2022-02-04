@@ -197,7 +197,7 @@ Module['FS_createPath']("/", "res", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/res/Placeholder.png", "start": 0, "end": 310}, {"filename": "/res/FreePixel.ttf", "start": 310, "end": 65190}], "remote_package_size": 65190, "package_uuid": "f6f831df-a2e3-413d-8b63-2f3db5a43885"});
+    loadPackage({"files": [{"filename": "/res/FreePixel.ttf", "start": 0, "end": 64880}, {"filename": "/res/Placeholder.png", "start": 64880, "end": 65190}], "remote_package_size": 65190, "package_uuid": "553e4d5b-3a4f-45cc-a9bb-d5ac0c826a3b"});
 
   })();
 
@@ -9246,10 +9246,10 @@ var _free = Module["_free"] = createExportWrapper("free");
 var _memcpy = Module["_memcpy"] = createExportWrapper("memcpy");
 
 /** @type {function(...*):?} */
-var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");
+var _saveSetjmp = Module["_saveSetjmp"] = createExportWrapper("saveSetjmp");
 
 /** @type {function(...*):?} */
-var _saveSetjmp = Module["_saveSetjmp"] = createExportWrapper("saveSetjmp");
+var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");
 
 /** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");

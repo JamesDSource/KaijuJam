@@ -89,7 +89,7 @@ void loop(void* arg) {
 		} else {
 			planes->flags[player_index] |= PLANE_STATUS_NOTHRUST;
 		}
-
+		planes->targets[player_index] = (Vec2){mouse_x, mouse_y};	
 		planes_move(planes);
 
 		// Moving the camera twords the player

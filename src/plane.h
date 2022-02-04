@@ -2,7 +2,6 @@
 #define PLANE__
 
 #include<stdint.h>
-
 typedef enum {
 	PLANE_STATUS_NOTHRUST = 1,
 	PLANE_STATUS_DEAD = 2
@@ -17,6 +16,10 @@ typedef struct {
 }Vec2;
 
 typedef struct {
+	float accel;
+	float turn_accel;
+	float max_speed;
+	float max_turn;
 	float dir;
 	float turn;
 	float speed;
@@ -29,6 +32,7 @@ typedef struct {
 	uint32_t* ids;
 	Vec2* positions;
 	PlaneVel* velocities;
+	Vec2* targets;
 	unsigned char* flags;
 	PlaneTypes* types;
 
