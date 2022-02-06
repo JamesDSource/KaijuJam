@@ -22,6 +22,11 @@ typedef struct {
 	Vec2 momentum;
 }PlaneVel;
 
+typedef enum {
+	PROJ_FLAG_PLAYER = 1,
+	PROJ_FLAG_ENEMY = 2
+}ProjectileFlags;
+
 typedef struct {
 	uint32_t allocated;
 	uint32_t count;
@@ -32,11 +37,6 @@ typedef struct {
 	Vec2* targets;
 	unsigned char* flags;
 	PlaneTypes* types;
-
-	// uint32_t projectiles_allocated;
-	// uint32_t projectiles_count;
-	// Vec2* projectile_positions;
-	// unsigned char* projectile_flags;
 }Planes;
 
 extern const float GRAVITY;
