@@ -14,9 +14,7 @@ typedef enum {
 }PlaneTypes;
 
 typedef struct {
-	float accel;
 	float turn_accel;
-	float max_speed;
 	float max_turn;
 	float dir;
 	float turn;
@@ -29,6 +27,7 @@ typedef struct {
 	uint32_t count;
 	uint32_t* ids;
 	Vec2* positions;
+	Vec2* collider_sizes;
 	PlaneVel* velocities;
 	Vec2* targets;
 	unsigned char* flags;

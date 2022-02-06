@@ -15,6 +15,7 @@ Planes* planes_init() {
 
 	planes->ids = malloc(sizeof(*planes->ids)*alloc);
 	planes->positions = malloc(sizeof(*planes->positions)*alloc);
+	planes->collider_sizes = malloc(sizeof(*planes->collider_sizes)*alloc);
 	planes->velocities = malloc(sizeof(*planes->velocities)*alloc);
 	planes->targets = malloc(sizeof(*planes->targets)*alloc);
 	planes->flags = malloc(sizeof(*planes->flags)*alloc);
@@ -25,6 +26,7 @@ Planes* planes_init() {
 void planes_free(Planes* planes) {
 	free(planes->ids);
 	free(planes->positions);
+	free(planes->collider_sizes);
 	free(planes->velocities);
 	free(planes->targets);
 	free(planes->flags);
@@ -39,6 +41,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 		const uint32_t alloc = planes->allocated *= 2;
 		planes->ids = realloc(planes->ids, sizeof(*planes->ids)*alloc);
 		planes->positions = realloc(planes->positions, sizeof(*planes->positions)*alloc);
+		planes->collider_sizes = realloc(planes->collider_sizes, sizeof(*planes->collider_sizes)*alloc);
 		planes->velocities = realloc(planes->velocities, sizeof(*planes->velocities)*alloc);
 		planes->targets = realloc(planes->targets, sizeof(*planes->targets)*alloc);
 		planes->flags = realloc(planes->flags, sizeof(*planes->flags)*alloc);
@@ -47,13 +50,12 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	
 	planes->ids[i] = next_id;
 	planes->positions[i] = (Vec2){0, 0};
+	planes->collider_sizes[i] = (Vec2){10, 10};
 	planes->velocities[i] = (PlaneVel){
-		.accel = 0.1,
 		.turn_accel = .5,
-		.max_speed = 5,
 		.max_turn = 4,
 		.dir = 0,
-		.speed = 0,
+		.speed = 5,
 		.turn = 0,
 		.momentum = (Vec2){0, 0}
 	};
@@ -72,8 +74,11 @@ void plane_remove(Planes* planes, uint32_t id) {
 		if(planes->ids[i] == id) {
 			planes->ids[i] = planes->ids[last_index];
 			planes->positions[i] = planes->positions[last_index];
+			planes->collider_sizes[i] = planes->collider_sizes[last_index];
 			planes->velocities[i] = planes->velocities[last_index];
+			planes->targets[i] = planes->targets[last_index];
 			planes->flags[i] = planes->flags[last_index];
+			planes->types[i] = planes->types[last_index];
 		}
 	}
 }
@@ -125,14 +130,6 @@ void planes_move(Planes* planes) {
 			// Cap out the turn
 			if(fabs(vel->turn) > vel->max_turn) {
 				vel->turn = copysign(vel->max_turn, vel->turn);
-			}
-
-			if(fabs(vel->speed - vel->max_speed) < vel->accel) {
-				vel->speed = vel->max_speed;
-			} else if(vel->speed > vel->max_speed) {
-				vel->speed -= vel->accel;
-			} else {
-				vel->speed += vel->accel;
 			}
 
 			if(fabs(angle_dif) < fabs(vel->turn)) {
