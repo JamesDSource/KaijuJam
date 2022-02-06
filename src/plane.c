@@ -50,7 +50,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	planes->velocities[i] = (PlaneVel){
 		.accel = 0.1,
 		.turn_accel = .5,
-		.max_speed = 3,
+		.max_speed = 5,
 		.max_turn = 4,
 		.dir = 0,
 		.speed = 0,
@@ -104,33 +104,42 @@ void planes_move(Planes* planes) {
 			}
 			// Interpolate turn
 			float angle_dif = angle_to_target - vel->dir;
-			if(vel->turn < angle_dif) {
+			float angle_dif2;
+			if(vel->dir > 180) {
+				angle_dif2 = 360 - vel->dir + angle_to_target;
+			} else {
+				angle_dif2 = -vel->dir - (360 - angle_to_target);
+			}
+
+			if(fabs(angle_dif2) < fabs(angle_dif)) {
+				angle_dif = angle_dif2;
+			}
+
+			if(fabs(vel->turn - angle_dif) <= vel->turn_accel) {
+				vel->turn = angle_dif;
+			} else if(vel->turn < angle_dif) {
 				vel->turn += vel->turn_accel; 
-				if(vel->turn > angle_dif) {
-					vel->turn = angle_dif;
-				}
 			} else { 
 				vel->turn -= vel->turn_accel;
-				if(vel->turn < angle_dif) {
-					vel->turn = angle_dif;
-				}
 			}
 			// Cap out the turn
 			if(fabs(vel->turn) > vel->max_turn) {
-				vel->turn = vel->max_turn*(vel->turn/fabs(vel->turn));
+				vel->turn = copysign(vel->max_turn, vel->turn);
 			}
 
 			if(fabs(vel->speed - vel->max_speed) < vel->accel) {
 				vel->speed = vel->max_speed;
-			}
-			else if(vel->speed > vel->max_speed) {
+			} else if(vel->speed > vel->max_speed) {
 				vel->speed -= vel->accel;
-			}
-			else {
+			} else {
 				vel->speed += vel->accel;
 			}
 
-			vel->dir += vel->turn;
+			if(fabs(angle_dif) < fabs(vel->turn)) {
+				vel->dir = angle_to_target;
+			} else {
+				vel->dir += vel->turn;
+			}
 			while(vel->dir > 360) {
 				vel->dir -= 360;
 			}

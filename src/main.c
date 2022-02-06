@@ -11,7 +11,8 @@ const uint32_t SCREEN_SIZE_H = 720;
 
 const uint32_t LEVEL_HEIGHT = 1280;
 const uint32_t LEVEL_WIDTH = 5120;
-const uint32_t OCEAN_HEIGHT = 180;
+const uint32_t OCEAN_HEIGHT = 80;
+const uint32_t OCEAN_BACKGROUND = 60;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -41,7 +42,13 @@ void draw_planes() {
 		switch(planes->types[i]) {
 			case PLANE_TYPE_PLAYER:
 				;Vec2 pos = planes->positions[i];
-				draw_texture(player_texture, pos.x - camera_x, pos.y - camera_y, "cc", planes->velocities[i].dir, SDL_FLIP_NONE);
+
+				SDL_RendererFlip flip = SDL_FLIP_NONE;
+				if(planes->velocities[i].dir > 90 && planes->velocities[i].dir < 270) {
+					flip = SDL_FLIP_VERTICAL;
+				}
+
+				draw_texture(player_texture, pos.x - camera_x, pos.y - camera_y, "cc", planes->velocities[i].dir, flip);
 				break;
 		}
 	}
@@ -94,8 +101,8 @@ void loop(void* arg) {
 
 		// Moving the camera twords the player
 		Vec2 pos = planes->positions[player_index];
-		camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/5;
-		camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/5;
+		camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/10;
+		camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/10;
 	}
 
 	// Clamping the camera
@@ -122,6 +129,19 @@ void loop(void* arg) {
 	SDL_SetRenderTarget(renderer, application_surface);
 	SDL_RenderClear(renderer);
 
+	// Drawing the ocean background
+	if(camera_y >= LEVEL_HEIGHT - SCREEN_RES_H - OCEAN_HEIGHT - OCEAN_BACKGROUND) {
+		SDL_Rect ocean_background_rect = {
+			.x = 0,
+			.y = LEVEL_HEIGHT - OCEAN_HEIGHT - OCEAN_BACKGROUND - camera_y,
+			.w = SCREEN_RES_W,
+			.h = OCEAN_BACKGROUND
+		};
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 200, 255);
+		SDL_RenderFillRect(renderer, &ocean_background_rect);
+	}
+
 	draw_planes();
 
 	// Drawing the ocean
@@ -132,7 +152,6 @@ void loop(void* arg) {
 			.w = SCREEN_RES_W,
 			.h = OCEAN_HEIGHT
 		};
-
 		SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 		SDL_RenderFillRect(renderer, &ocean_rect);
 	}

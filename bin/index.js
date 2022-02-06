@@ -197,7 +197,7 @@ Module['FS_createPath']("/", "res", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/res/FreePixel.ttf", "start": 0, "end": 64880}, {"filename": "/res/Placeholder.png", "start": 64880, "end": 65190}], "remote_package_size": 65190, "package_uuid": "553e4d5b-3a4f-45cc-a9bb-d5ac0c826a3b"});
+    loadPackage({"files": [{"filename": "/res/Placeholder.png", "start": 0, "end": 310}, {"filename": "/res/FreePixel.ttf", "start": 310, "end": 65190}], "remote_package_size": 65190, "package_uuid": "f4a267a8-62d7-43dd-9ca0-4cef60eb9966"});
 
   })();
 
