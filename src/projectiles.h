@@ -28,5 +28,9 @@ void proj_free();
 
 Projectiles* proj_create();
 void proj_destroy(Projectiles* proj);
+void proj_add(Projectiles* proj, ProjectileTypes type, Vec2 pos, float angle_rad, float speed);
+void proj_remove(Projectiles* proj, uint32_t index);
+void proj_move(Projectiles* proj);
+void proj_draw(Projectiles* proj);
 
 #endif

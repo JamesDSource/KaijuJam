@@ -1,5 +1,6 @@
 #include <math.h>
 
+#include "clouds.h"
 #include"main.h"
 #include"draw.h"
 #include"plane.h"
@@ -13,10 +14,10 @@ const uint32_t SCREEN_SIZE_H = 720;
 const uint32_t LEVEL_HEIGHT = 1280;
 const uint32_t LEVEL_WIDTH = 5120;
 const uint32_t OCEAN_HEIGHT = 80;
-const uint32_t OCEAN_BACKGROUND = 60;
+const uint32_t OCEAN_BACKGROUND = 40;
 
+const SDL_Color SKY_COLOR = {107, 148, 148, 255};
 const SDL_Color OCEAN_COLOR = {66, 148, 173, 255};
-const SDL_Color SKY_COLOR = {49, 123, 123, 255};
 const SDL_Color OCEAN_COLOR_BACKGROUND = {74, 115, 148, 255};
 const SDL_Color OCEAN_COLOR_SPARKLE = {156, 189, 181, 255};
 
@@ -35,6 +36,7 @@ bool isRunning = true;
 bool game_started = false;
 
 Planes* planes;
+Projectiles* projectiles;
 
 float camera_x = LEVEL_WIDTH/2.0 - SCREEN_RES_W/2.0, camera_y = LEVEL_HEIGHT/2.0 - SCREEN_RES_H/2.0;
 
@@ -125,6 +127,16 @@ void loop(void* arg) {
 		Vec2 pos = planes->positions[player_index];
 		camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/10;
 		camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/10;
+
+		if(space_bar_down) {
+			static uint32_t player_cooldown = 10; 
+			player_cooldown--;
+			if(player_cooldown == 0) {
+				proj_add(projectiles, PROJ_TYPE_PLAYER, pos, planes->velocities[player_index].dir*(M_PI/180), 12);
+				player_cooldown = 10;
+			}
+		}
+
 	}
 
 	// Clamping the camera
@@ -138,6 +150,8 @@ void loop(void* arg) {
 	} else if(camera_y > LEVEL_HEIGHT - SCREEN_RES_H) {
 		camera_y = LEVEL_HEIGHT - SCREEN_RES_H;
 	}
+
+	proj_move(projectiles);
 
 	/*
 	 *
@@ -191,8 +205,10 @@ void loop(void* arg) {
 				SDL_RenderDrawPoint(renderer, x, y + SCREEN_RES_H - true_height);
 			}
 		}
+
 	}
 
+	proj_draw(projectiles);
 	draw_planes();
 
 	// Drawing the ocean
@@ -258,6 +274,7 @@ void load_assets() {
   TTF_SetFontStyle(font_lrg, TTF_STYLE_BOLD);
 
 	player_texture = load_texture("res/Placeholder.png");
+	cloud_textures_init();
 	proj_init();
 }
 
@@ -267,6 +284,7 @@ void unload_assets() {
 	TTF_CloseFont(font_lrg);
 
 	SDL_DestroyTexture(player_texture);
+	cloud_textures_free();
 	proj_free();
 }
 
@@ -292,6 +310,9 @@ int main() {
 
 	load_assets();
 
+	proj_init();
+	projectiles = proj_create();
+
 	planes = planes_init();
 	uint32_t player_index;
 	player_id = plane_add(planes, &player_index);
@@ -300,6 +321,8 @@ int main() {
 
 	emscripten_set_main_loop_arg(loop, NULL, 60, 1);
 	planes_free(planes);
+	proj_destroy(projectiles);
+	proj_free();
 	
 	unload_assets();
 	TTF_Quit();

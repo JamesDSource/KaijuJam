@@ -30,4 +30,6 @@ extern TTF_Font* font_lrg;
 extern int mouse_screen_x;
 extern int mouse_screen_y;
 
+extern float camera_x, camera_y;
+
 #endif
