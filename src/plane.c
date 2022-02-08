@@ -17,6 +17,7 @@ Planes* planes_init() {
 	planes->positions = malloc(sizeof(*planes->positions)*alloc);
 	planes->collider_sizes = malloc(sizeof(*planes->collider_sizes)*alloc);
 	planes->velocities = malloc(sizeof(*planes->velocities)*alloc);
+	planes->dirs = malloc(sizeof(*planes->dirs)*alloc);
 	planes->targets = malloc(sizeof(*planes->targets)*alloc);
 	planes->flags = malloc(sizeof(*planes->flags)*alloc);
 	planes->types = malloc(sizeof(*planes->types)*alloc);
@@ -28,6 +29,7 @@ void planes_free(Planes* planes) {
 	free(planes->positions);
 	free(planes->collider_sizes);
 	free(planes->velocities);
+	free(planes->dirs);
 	free(planes->targets);
 	free(planes->flags);
 	free(planes->types);
@@ -43,6 +45,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 		planes->positions = realloc(planes->positions, sizeof(*planes->positions)*alloc);
 		planes->collider_sizes = realloc(planes->collider_sizes, sizeof(*planes->collider_sizes)*alloc);
 		planes->velocities = realloc(planes->velocities, sizeof(*planes->velocities)*alloc);
+		planes->dirs = realloc(planes->dirs, sizeof(*planes->dirs)*alloc);
 		planes->targets = realloc(planes->targets, sizeof(*planes->targets)*alloc);
 		planes->flags = realloc(planes->flags, sizeof(*planes->flags)*alloc);
 		planes->types = realloc(planes->types, sizeof(*planes->types)*alloc);
@@ -54,7 +57,6 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	planes->velocities[i] = (PlaneVel){
 		.turn_accel = .5,
 		.max_turn = 4,
-		.dir = 0,
 		.speed = 5,
 		.turn = 0,
 		.momentum = (Vec2){0, 0}
@@ -76,6 +78,7 @@ void plane_remove(Planes* planes, uint32_t id) {
 			planes->positions[i] = planes->positions[last_index];
 			planes->collider_sizes[i] = planes->collider_sizes[last_index];
 			planes->velocities[i] = planes->velocities[last_index];
+			planes->dirs[i] = planes->dirs[last_index];
 			planes->targets[i] = planes->targets[last_index];
 			planes->flags[i] = planes->flags[last_index];
 			planes->types[i] = planes->types[last_index];
@@ -100,6 +103,7 @@ void planes_move(Planes* planes) {
 			planes->positions[i].y += (planes->velocities[i].momentum.y += GRAVITY);
 		} else {
 			PlaneVel* vel = planes->velocities + i;
+			float dir = planes->dirs[i];
 			Vec2 target = planes->targets[i];
 			Vec2* pos = planes->positions + i;
 
@@ -108,12 +112,12 @@ void planes_move(Planes* planes) {
 				angle_to_target += 360;
 			}
 			// Interpolate turn
-			float angle_dif = angle_to_target - vel->dir;
+			float angle_dif = angle_to_target - dir;
 			float angle_dif2;
-			if(vel->dir > 180) {
-				angle_dif2 = 360 - vel->dir + angle_to_target;
+			if(dir > 180) {
+				angle_dif2 = 360 - dir + angle_to_target;
 			} else {
-				angle_dif2 = -vel->dir - (360 - angle_to_target);
+				angle_dif2 = -dir - (360 - angle_to_target);
 			}
 
 			if(fabs(angle_dif2) < fabs(angle_dif)) {
@@ -133,17 +137,17 @@ void planes_move(Planes* planes) {
 			}
 
 			if(fabs(angle_dif) < fabs(vel->turn)) {
-				vel->dir = angle_to_target;
+				planes->dirs[i] = angle_to_target;
 			} else {
-				vel->dir += vel->turn;
+				planes->dirs[i] += vel->turn;
 			}
-			while(vel->dir > 360) {
-				vel->dir -= 360;
+			while(dir > 360) {
+				 planes->dirs[i] = 360;
 			}
-			while(vel->dir < 0) {
-				vel->dir += 360;
+			while(dir < 0) {
+				planes->dirs[i] += 360;
 			}
-			float a = vel->dir*(M_PI/180);
+			float a = dir*(M_PI/180);
 
 			vel->momentum = (Vec2){cos(a)*vel->speed, sin(a)*vel->speed};
 			pos->x += vel->momentum.x;

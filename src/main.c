@@ -6,8 +6,8 @@
 #include"plane.h"
 #include"projectiles.h"
 
-const uint32_t SCREEN_RES_W = 640;
-const uint32_t SCREEN_RES_H = 480;
+const uint32_t SCREEN_RES_W = 480;
+const uint32_t SCREEN_RES_H = 270;
 const uint32_t SCREEN_SIZE_W = 1280;
 const uint32_t SCREEN_SIZE_H = 720;
 
@@ -35,6 +35,7 @@ int mouse_screen_x, mouse_screen_y;
 bool isRunning = true;
 bool game_started = false;
 
+Cloud* clouds;
 Planes* planes;
 Projectiles* projectiles;
 
@@ -45,7 +46,9 @@ uint32_t player_id;
 bool left_mouse_down = false;
 bool space_bar_down = false;
 
-SDL_Texture* player_texture;
+SDL_Texture** player_textures;
+const uint32_t PLAYER_FRAMES = 4;
+float player_current_frame = 0.0f;
 
 int noise(int x, int y) {
 	return (int)((((float)y)*12.9898 + ((float)x)*4.1414) * 43758.5453)%100;
@@ -58,11 +61,16 @@ void draw_planes() {
 				;Vec2 pos = planes->positions[i];
 
 				SDL_RendererFlip flip = SDL_FLIP_NONE;
-				if(planes->velocities[i].dir > 90 && planes->velocities[i].dir < 270) {
+				if(planes->dirs[i] > 90 && planes->dirs[i] < 270) {
 					flip = SDL_FLIP_VERTICAL;
 				}
 
-				draw_texture(player_texture, pos.x - camera_x, pos.y - camera_y, "cc", planes->velocities[i].dir, flip);
+				uint32_t frame_index = (uint32_t)player_current_frame;
+				draw_texture(player_textures[frame_index], pos.x - camera_x, pos.y - camera_y, "cc", planes->dirs[i], flip);
+				player_current_frame += 0.4;
+				if(player_current_frame > PLAYER_FRAMES) {
+					player_current_frame -= PLAYER_FRAMES;
+				}
 				break;
 		}
 	}
@@ -132,7 +140,7 @@ void loop(void* arg) {
 			static uint32_t player_cooldown = 10; 
 			player_cooldown--;
 			if(player_cooldown == 0) {
-				proj_add(projectiles, PROJ_TYPE_PLAYER, pos, planes->velocities[player_index].dir*(M_PI/180), 12);
+				proj_add(projectiles, PROJ_TYPE_PLAYER, pos, planes->dirs[player_index]*(M_PI/180), 12);
 				player_cooldown = 10;
 			}
 		}
@@ -200,8 +208,11 @@ void loop(void* arg) {
 		for(uint32_t i = 0; i < SCREEN_RES_W*height; ++i) {
 			int x = i%SCREEN_RES_W;	
 			int y = i/SCREEN_RES_W;	
-			int n = noise((x + (int)camera_x)%2000, y);
-			if(n > 97) {
+			
+			bool lower_half = y > OCEAN_BACKGROUND/2;
+			int real_x = x + camera_x/2; 
+			int n = noise(real_x%2000, y);
+			if((lower_half && n > 95) || (!lower_half && n > 96)) {
 				SDL_RenderDrawPoint(renderer, x, y + SCREEN_RES_H - true_height);
 			}
 		}
@@ -244,10 +255,14 @@ void loop(void* arg) {
 			}
 		}
 	}
+
+	clouds_draw(clouds);
 	
 	// Drawing the menu
 	if(!game_started) {
 		draw_text("UNTITLED PROJECT", font_lrg, SCREEN_RES_W/2, SCREEN_RES_H/4, "cc", NULL);
+		draw_text("Hold LEFT MOUSE to Move", font_sml, SCREEN_RES_W/2, SCREEN_RES_H/1.5 + 20, "cc", NULL);
+		draw_text("Hold SPACE to Fire", font_sml, SCREEN_RES_W/2, SCREEN_RES_H/1.5 + 38, "cc", NULL);
 		static bool draw_start = false;
 		if(t % 30 == 0) {
 			draw_start = !draw_start;
@@ -268,12 +283,12 @@ void loop(void* arg) {
 }
 
 void load_assets() {
-	font_sml = TTF_OpenFont("res/FreePixel.ttf", 12);
+	font_sml = TTF_OpenFont("res/FreePixel.ttf", 18);
 	font_med = TTF_OpenFont("res/FreePixel.ttf", 32);
 	font_lrg = TTF_OpenFont("res/FreePixel.ttf", 48);
   TTF_SetFontStyle(font_lrg, TTF_STYLE_BOLD);
 
-	player_texture = load_texture("res/Placeholder.png");
+	player_textures = load_texture_strip("res/KaijuPlane.png", PLAYER_FRAMES);
 	cloud_textures_init();
 	proj_init();
 }
@@ -283,7 +298,7 @@ void unload_assets() {
 	TTF_CloseFont(font_med);
 	TTF_CloseFont(font_lrg);
 
-	SDL_DestroyTexture(player_texture);
+	free_texture_strip(player_textures, PLAYER_FRAMES);
 	cloud_textures_free();
 	proj_free();
 }
@@ -301,6 +316,7 @@ int main() {
 			SCREEN_SIZE_H, 
 			SDL_WINDOW_SHOWN);
 	renderer = SDL_CreateRenderer(window, -1, 0);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	application_surface = SDL_CreateTexture(
 		renderer, 
 		SDL_PIXELFORMAT_RGBA32, 
@@ -309,6 +325,8 @@ int main() {
 		SCREEN_RES_H);
 
 	load_assets();
+
+	clouds = clouds_init();
 
 	proj_init();
 	projectiles = proj_create();
@@ -323,6 +341,8 @@ int main() {
 	planes_free(planes);
 	proj_destroy(projectiles);
 	proj_free();
+
+	clouds_free(clouds);
 	
 	unload_assets();
 	TTF_Quit();

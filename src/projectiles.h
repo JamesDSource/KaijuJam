@@ -18,6 +18,7 @@ typedef struct {
 	ProjectileTypes* types;
 	Vec2* positions;
 	Vec2* velocities;
+	uint32_t* life;
 }Projectiles;
 
 extern SDL_Texture* PROJECTILE_TEXTURES[PROJ_TYPE_COUNT];

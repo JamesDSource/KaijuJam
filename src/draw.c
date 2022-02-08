@@ -1,4 +1,5 @@
 #include"draw.h"
+#include <SDL2/SDL_render.h>
 
 SDL_Texture* load_texture(const char* path) {
 	SDL_Surface* surface = IMG_Load(path);
@@ -7,6 +8,50 @@ SDL_Texture* load_texture(const char* path) {
 	assert(tex != NULL);
 	SDL_FreeSurface(surface);
 	return tex;
+}
+
+SDL_Texture** load_texture_strip(const char* path, uint32_t segments) {
+	SDL_Surface* surface = IMG_Load(path);
+	assert(surface != NULL);
+	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);
+	assert(tex != NULL);
+	SDL_FreeSurface(surface);
+
+	int w, h;
+	SDL_QueryTexture(tex, NULL, NULL, &w, &h);
+	int seg_w = w/segments;
+
+	SDL_Texture** textures;
+	textures = malloc(sizeof(void*)*segments);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+	for(uint32_t i = 0; i < segments; ++i) {
+		textures[i] = SDL_CreateTexture(renderer, 
+			SDL_PIXELFORMAT_RGBA8888,
+			SDL_TEXTUREACCESS_TARGET,
+			seg_w,
+			h);
+		SDL_Rect src_rect = {
+			.x = i*seg_w,
+			.y = 0,
+			.w = seg_w,
+			.h = h
+		};
+		SDL_SetTextureBlendMode(textures[i], SDL_BLENDMODE_BLEND);
+		SDL_SetRenderTarget(renderer, textures[i]);
+		SDL_RenderClear(renderer);
+		SDL_RenderCopy(renderer, tex, &src_rect, NULL);
+	}
+	SDL_SetRenderTarget(renderer, application_surface);
+	SDL_DestroyTexture(tex);
+
+	return textures;
+}
+
+void free_texture_strip(SDL_Texture** strip, uint32_t segments) {
+	for(uint32_t i = 0; i < segments; ++i) {
+		SDL_DestroyTexture(strip[i]);
+	}
+	free(strip);
 }
 
 void draw_texture(SDL_Texture* texture, int x, int y, char align[2], float rotation, SDL_RendererFlip flip) {

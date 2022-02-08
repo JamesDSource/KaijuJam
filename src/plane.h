@@ -16,16 +16,10 @@ typedef enum {
 typedef struct {
 	float turn_accel;
 	float max_turn;
-	float dir;
 	float turn;
 	float speed;
 	Vec2 momentum;
 }PlaneVel;
-
-typedef enum {
-	PROJ_FLAG_PLAYER = 1,
-	PROJ_FLAG_ENEMY = 2
-}ProjectileFlags;
 
 typedef struct {
 	uint32_t allocated;
@@ -34,6 +28,7 @@ typedef struct {
 	Vec2* positions;
 	Vec2* collider_sizes;
 	PlaneVel* velocities;
+	float* dirs;
 	Vec2* targets;
 	unsigned char* flags;
 	PlaneTypes* types;

@@ -4,8 +4,8 @@
 #include<stdint.h>
 #include"vec2.h"
 
-#define CLOUD_COUNT 20
-#define CLOUD_MIN_HEIGHT 168
+#define CLOUD_COUNT 128
+#define CLOUD_MIN_HEIGHT 368
 
 typedef enum {
 	CLOUD_TEX1,
@@ -25,6 +25,6 @@ void cloud_textures_init();
 void cloud_textures_free();
 Cloud* clouds_init();
 void clouds_free(Cloud* clouds);
-void clouds_update(Cloud* clouds);
+void clouds_draw(Cloud* clouds);
 
 #endif
