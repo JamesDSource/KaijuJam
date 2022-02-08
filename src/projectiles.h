@@ -4,6 +4,7 @@
 #include<SDL2/SDL.h>
 #include<stdint.h>
 #include"vec2.h"
+#include"plane.h"
 
 typedef enum {
 	PROJ_TYPE_PLAYER,
@@ -33,5 +34,6 @@ void proj_add(Projectiles* proj, ProjectileTypes type, Vec2 pos, float angle_rad
 void proj_remove(Projectiles* proj, uint32_t index);
 void proj_move(Projectiles* proj);
 void proj_draw(Projectiles* proj);
+void proj_check_collision(Projectiles* proj, Planes* planes);
 
 #endif

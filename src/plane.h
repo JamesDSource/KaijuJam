@@ -10,7 +10,8 @@ typedef enum {
 }PlaneStatusFlags;
 
 typedef enum {
-	PLANE_TYPE_PLAYER
+	PLANE_TYPE_PLAYER,
+	PLANE_TYPE_DRAGONFLY
 }PlaneTypes;
 
 typedef struct {
@@ -32,6 +33,7 @@ typedef struct {
 	Vec2* targets;
 	unsigned char* flags;
 	PlaneTypes* types;
+	uint32_t* health;
 }Planes;
 
 extern const float GRAVITY;

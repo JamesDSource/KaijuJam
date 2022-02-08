@@ -5,7 +5,7 @@
 #include"plane.h"
 #include"main.h"
 
-const float GRAVITY = 0.1;
+const float GRAVITY = 0.06;
 
 Planes* planes_init() {
 	Planes* planes = malloc(sizeof(Planes));
@@ -21,6 +21,7 @@ Planes* planes_init() {
 	planes->targets = malloc(sizeof(*planes->targets)*alloc);
 	planes->flags = malloc(sizeof(*planes->flags)*alloc);
 	planes->types = malloc(sizeof(*planes->types)*alloc);
+	planes->health = malloc(sizeof(*planes->health)*alloc);
 	return planes;
 }
 
@@ -33,6 +34,7 @@ void planes_free(Planes* planes) {
 	free(planes->targets);
 	free(planes->flags);
 	free(planes->types);
+	free(planes->health);
 	free(planes);
 }
 
@@ -49,6 +51,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 		planes->targets = realloc(planes->targets, sizeof(*planes->targets)*alloc);
 		planes->flags = realloc(planes->flags, sizeof(*planes->flags)*alloc);
 		planes->types = realloc(planes->types, sizeof(*planes->types)*alloc);
+		planes->health = realloc(planes->health, sizeof(*planes->health)*alloc);
 	}
 	
 	planes->ids[i] = next_id;
@@ -63,6 +66,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	};
 	planes->targets[i] = (Vec2){0, 0};
 	planes->flags[i] = 0;
+	planes->health[i] = 5;
 	
 	if(index != NULL) {
 		*index = i;
@@ -70,20 +74,20 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	return next_id++;
 }
 
-void plane_remove(Planes* planes, uint32_t id) {
+void plane_remove(Planes* planes, uint32_t index) {
 	uint32_t last_index = --planes->count;
-	for(int32_t i = planes->count - 2; i >= 0; --i) { // Starting from the second to last
-		if(planes->ids[i] == id) {
-			planes->ids[i] = planes->ids[last_index];
-			planes->positions[i] = planes->positions[last_index];
-			planes->collider_sizes[i] = planes->collider_sizes[last_index];
-			planes->velocities[i] = planes->velocities[last_index];
-			planes->dirs[i] = planes->dirs[last_index];
-			planes->targets[i] = planes->targets[last_index];
-			planes->flags[i] = planes->flags[last_index];
-			planes->types[i] = planes->types[last_index];
-		}
+	if(index == last_index) {
+		return;
 	}
+	planes->ids[index] = planes->ids[last_index];
+	planes->positions[index] = planes->positions[last_index];
+	planes->collider_sizes[index] = planes->collider_sizes[last_index];
+	planes->velocities[index] = planes->velocities[last_index];
+	planes->dirs[index] = planes->dirs[last_index];
+	planes->targets[index] = planes->targets[last_index];
+	planes->flags[index] = planes->flags[last_index];
+	planes->types[index] = planes->types[last_index];
+	planes->health[index] = planes->health[last_index];
 }
 
 uint32_t	plane_get(Planes* planes, uint32_t id) {
@@ -98,7 +102,7 @@ uint32_t	plane_get(Planes* planes, uint32_t id) {
 
 void planes_move(Planes* planes) {
 	for(uint32_t i = 0; i < planes->count; ++i) {
-		if((planes->flags[i] & (PLANE_STATUS_DEAD | PLANE_STATUS_NOTHRUST)) != 0) {
+		if((planes->flags[i] & PLANE_STATUS_NOTHRUST) != 0) {
 			planes->positions[i].x += planes->velocities[i].momentum.x;
 			planes->positions[i].y += (planes->velocities[i].momentum.y += GRAVITY);
 		} else {

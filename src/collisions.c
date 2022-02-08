@@ -83,5 +83,51 @@ bool collide_rect_and_rect(Vec2 pos1, Vec2 size1, float orient_rad1, Vec2 pos2, 
 }
 
 bool collide_rect_and_circle(Vec2 rect_pos, Vec2 rect_size, float rect_orient, Vec2 circle_pos, float circle_rad) {
-	return false;
+	Vec2 verticies[4] = {
+		rect_pos.x - rect_size.x/2, rect_pos.y - rect_size.y/2,
+		rect_pos.x - rect_size.x/2, rect_pos.y + rect_size.y/2,
+		rect_pos.x + rect_size.x/2, rect_pos.y + rect_size.y/2,
+		rect_pos.x + rect_size.x/2, rect_pos.y - rect_size.y/2
+	};
+	// Rotate verticies
+	for(uint32_t i = 0; i < 4; ++i) {
+		float x1 = verticies[i].x - rect_pos.x;
+		float y1 = verticies[i].y - rect_pos.y;
+
+		float x2 = x1*cos(rect_orient) - y1*sin(rect_orient);
+		float y2 = x1*sin(rect_orient) + y1*cos(rect_orient);
+
+		verticies[i] = (Vec2){rect_pos.x + x2, rect_pos.y + y2};
+	}
+	
+	// Create the axis
+	Vec2 axes[4] = {
+		vec2_normalize((Vec2){verticies[1].x - verticies[0].x, verticies[1].y - verticies[0].y}),
+		vec2_normalize((Vec2){verticies[2].x - verticies[1].x, verticies[2].y - verticies[1].y}),
+	};
+
+	for(uint32_t i = 0; i < 4; ++i) {
+		Vec2 axis = axes[i];
+
+		float max1 = FLT_MIN;
+		float min1 = FLT_MAX;
+		for(uint32_t j = 0; j < 4; ++j) {
+				float projection = vec2_dot(verticies[j], axis);		
+
+				if(projection > max1) {
+					max1 = projection;
+				}
+				if(projection < min1) {
+					min1 = projection;
+				}
+		}
+
+		float max2 = vec2_dot((Vec2){circle_pos.x + circle_rad*axis.x, circle_pos.y + circle_rad*axis.y}, axis);
+		float min2 = vec2_dot((Vec2){circle_pos.x - circle_rad*axis.x, circle_pos.y - circle_rad*axis.y}, axis);
+
+		if(min2 < max1 && min1 < max2) {
+			return false;
+		}
+	}
+	return true;
 }

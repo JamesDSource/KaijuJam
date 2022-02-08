@@ -21,6 +21,11 @@ const SDL_Color OCEAN_COLOR = {66, 148, 173, 255};
 const SDL_Color OCEAN_COLOR_BACKGROUND = {74, 115, 148, 255};
 const SDL_Color OCEAN_COLOR_SPARKLE = {156, 189, 181, 255};
 
+const SDL_Color AMMO_BAR_COLOR = {250, 220, 55, 255};
+const SDL_Color AMMO_BAR_COLOR_RIM = {74, 66, 57, 255};
+const SDL_Color HEALTH_BAR_COLOR = {231, 99, 82, 255};
+const SDL_Color HEALTH_BAR_COLOR_RIM = {74, 66, 57, 255};
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* application_surface;
@@ -50,8 +55,58 @@ SDL_Texture** player_textures;
 const uint32_t PLAYER_FRAMES = 4;
 float player_current_frame = 0.0f;
 
+const uint32_t PLAYER_MAX_AMMO = 50;
+float player_ammo_left = PLAYER_MAX_AMMO;
+int player_last_x, player_last_y;
+
+SDL_Texture** dragonfly_textures;
+
 int noise(int x, int y) {
 	return (int)((((float)y)*12.9898 + ((float)x)*4.1414) * 43758.5453)%100;
+}
+
+void update_planes() {
+	for(uint32_t i = 0; i < planes->count; ++i) {
+		switch(planes->types[i]) {
+			case PLANE_TYPE_PLAYER:
+				;int mouse_x = mouse_screen_x + camera_x;
+				int mouse_y = mouse_screen_y + camera_y;
+
+				if(left_mouse_down) {
+					planes->flags[i] &= ~PLANE_STATUS_NOTHRUST;
+				} else {
+					planes->flags[i] |= PLANE_STATUS_NOTHRUST;
+				}
+				planes->targets[i] = (Vec2){mouse_x, mouse_y};	
+
+				Vec2 pos = planes->positions[i];
+				camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/10;
+				camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/10;
+
+				if(space_bar_down && player_ammo_left >= 1) {
+					static uint32_t player_cooldown = 10; 
+					player_cooldown--;
+					if(player_cooldown == 0) {
+						proj_add(projectiles, PROJ_TYPE_PLAYER, pos, planes->dirs[i]*(M_PI/180), 12);
+						player_cooldown = 10;
+						player_ammo_left--;
+					}
+				}
+				else {
+					player_ammo_left += 0.05;
+					if(player_ammo_left > PLAYER_MAX_AMMO) {
+						player_ammo_left = PLAYER_MAX_AMMO;
+					}
+				}
+
+				player_last_x = pos.x;
+				player_last_y = pos.y;
+				break;
+			case PLANE_TYPE_DRAGONFLY:
+				planes->targets[i] = (Vec2){player_last_x, player_last_y};
+				break;
+		}
+	}
 }
 
 void draw_planes() {
@@ -71,6 +126,15 @@ void draw_planes() {
 				if(player_current_frame > PLAYER_FRAMES) {
 					player_current_frame -= PLAYER_FRAMES;
 				}
+				break;
+			case PLANE_TYPE_DRAGONFLY:
+				;Vec2 df_pos = planes->positions[i];
+
+				SDL_RendererFlip df_flip = SDL_FLIP_NONE;
+				if(planes->dirs[i] > 90 && planes->dirs[i] < 270) {
+					df_flip = SDL_FLIP_HORIZONTAL;
+				}
+				draw_texture(dragonfly_textures[0], df_pos.x - camera_x, df_pos.y - camera_y, "cc", 0, df_flip);
 				break;
 		}
 	}
@@ -118,33 +182,10 @@ void loop(void* arg) {
 	}
 
 	if(game_started) {
-		// Calculate mouse position
-		int mouse_x = mouse_screen_x + camera_x;
-		int mouse_y = mouse_screen_y + camera_y;
-
-		uint32_t player_index = plane_get(planes, player_id);
-		if(left_mouse_down) {
-			planes->flags[player_index] &= ~PLANE_STATUS_NOTHRUST;
-		} else {
-			planes->flags[player_index] |= PLANE_STATUS_NOTHRUST;
-		}
-		planes->targets[player_index] = (Vec2){mouse_x, mouse_y};	
+		update_planes();
 		planes_move(planes);
-
-		// Moving the camera twords the player
-		Vec2 pos = planes->positions[player_index];
-		camera_x += (pos.x - (camera_x + SCREEN_RES_W/2.0))/10;
-		camera_y += (pos.y - (camera_y + SCREEN_RES_H/2.0))/10;
-
-		if(space_bar_down) {
-			static uint32_t player_cooldown = 10; 
-			player_cooldown--;
-			if(player_cooldown == 0) {
-				proj_add(projectiles, PROJ_TYPE_PLAYER, pos, planes->dirs[player_index]*(M_PI/180), 12);
-				player_cooldown = 10;
-			}
-		}
-
+		proj_move(projectiles);
+		proj_check_collision(projectiles, planes);
 	}
 
 	// Clamping the camera
@@ -158,8 +199,6 @@ void loop(void* arg) {
 	} else if(camera_y > LEVEL_HEIGHT - SCREEN_RES_H) {
 		camera_y = LEVEL_HEIGHT - SCREEN_RES_H;
 	}
-
-	proj_move(projectiles);
 
 	/*
 	 *
@@ -271,10 +310,78 @@ void loop(void* arg) {
 			draw_text("Click to Start", font_med, SCREEN_RES_W/2, SCREEN_RES_H/1.5, "cc", NULL);
 		}
 	}
+	//
+	// Draw gui elements
+	if(game_started) {
+		int margins = 10;
+		const int BAR_WIDTH = 64;
+		SDL_Rect ammo_rect = {
+			.x = SCREEN_RES_W - margins - BAR_WIDTH,
+			.y = margins,
+			.w = BAR_WIDTH*(player_ammo_left/PLAYER_MAX_AMMO),
+			.h = 12
+		};
+		SDL_Rect ammo_rect_rim = {
+			.x = SCREEN_RES_W - margins - BAR_WIDTH,
+			.y = margins,
+			.w = BAR_WIDTH,
+			.h = 12
+		};
+
+		SDL_SetRenderDrawColor(
+			renderer,
+			AMMO_BAR_COLOR.r,
+			AMMO_BAR_COLOR.g,
+			AMMO_BAR_COLOR.b,
+			AMMO_BAR_COLOR.a
+		);
+		SDL_RenderFillRect(renderer, &ammo_rect);
+
+		SDL_SetRenderDrawColor(
+			renderer,
+			AMMO_BAR_COLOR_RIM.r,
+			AMMO_BAR_COLOR_RIM.g,
+			AMMO_BAR_COLOR_RIM.b,
+			AMMO_BAR_COLOR_RIM.a
+		);
+		SDL_RenderDrawRect(renderer, &ammo_rect_rim);
+
+		SDL_Rect health_rect = {
+			.x = margins,
+			.y = margins,
+			.w = BAR_WIDTH*(player_ammo_left/PLAYER_MAX_AMMO),
+			.h = 12
+		};
+		SDL_Rect health_rect_rim = {
+			.x = margins,
+			.y = margins,
+			.w = BAR_WIDTH,
+			.h = 12
+		};
+
+		SDL_SetRenderDrawColor(
+			renderer,
+			HEALTH_BAR_COLOR.r,
+			HEALTH_BAR_COLOR.g,
+			HEALTH_BAR_COLOR.b,
+			HEALTH_BAR_COLOR.a
+		);
+		SDL_RenderFillRect(renderer, &health_rect);
+
+		SDL_SetRenderDrawColor(
+			renderer,
+			HEALTH_BAR_COLOR_RIM.r,
+			HEALTH_BAR_COLOR_RIM.g,
+			HEALTH_BAR_COLOR_RIM.b,
+			HEALTH_BAR_COLOR_RIM.a
+		);
+		SDL_RenderDrawRect(renderer, &health_rect_rim);
+	}
 
 	SDL_SetRenderTarget(renderer, NULL);
 	SDL_RenderCopy(renderer, application_surface, NULL, NULL);
 	SDL_RenderPresent(renderer);
+
 	if(!isRunning) {
 		emscripten_cancel_main_loop();
 	}
@@ -289,6 +396,7 @@ void load_assets() {
   TTF_SetFontStyle(font_lrg, TTF_STYLE_BOLD);
 
 	player_textures = load_texture_strip("res/KaijuPlane.png", PLAYER_FRAMES);
+	dragonfly_textures = load_texture_strip("res/Dragonfly.png", 1);
 	cloud_textures_init();
 	proj_init();
 }
@@ -336,6 +444,14 @@ int main() {
 	player_id = plane_add(planes, &player_index);
 	planes->positions[player_index] = (Vec2){camera_x + SCREEN_RES_W/2.0, camera_y + SCREEN_RES_H/2.0};
 	planes->types[player_index] = PLANE_TYPE_PLAYER;
+
+	uint32_t df_index;
+	plane_add(planes, &df_index);
+	planes->types[df_index] = PLANE_TYPE_DRAGONFLY;
+	planes->velocities[df_index].speed = 3;
+	planes->velocities[df_index].turn_accel = 1;
+	planes->velocities[df_index].max_turn = 10;
+	planes->collider_sizes[df_index] = (Vec2){24, 24};
 
 	emscripten_set_main_loop_arg(loop, NULL, 60, 1);
 	planes_free(planes);

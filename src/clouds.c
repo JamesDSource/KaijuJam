@@ -41,7 +41,7 @@ void clouds_free(Cloud* clouds) {
 
 void clouds_draw(Cloud* clouds) {
 	for(uint32_t i = 0; i < CLOUD_COUNT; ++i) {
-		clouds[i].position.x -= 0.2;
+		clouds[i].position.x -= 0.05;
 		if(clouds[i].position.x < -CLOUD_OFFSCREEN_BUFFER) {
 			clouds[i].position.x = LEVEL_WIDTH + CLOUD_OFFSCREEN_BUFFER;
 			clouds[i].position = (Vec2){

@@ -1,6 +1,5 @@
 #include"projectiles.h"
 #include"draw.h"
-#include"plane.h"
 #include"collisions.h"
 
 SDL_Texture* PROJECTILE_TEXTURES[PROJ_TYPE_COUNT] = {};
@@ -104,7 +103,12 @@ void proj_check_collision(Projectiles* proj, Planes* planes) {
 			Vec2 plane_size = planes->collider_sizes[j];
 			float plane_dir = planes->dirs[j];
 			if(collide_rect_and_circle(plane_pos, plane_size, plane_dir, proj_pos, proj_radius)) {
-				// Do something
+				printf("Hit\n");
+				planes->health[j]--;	
+				if(planes->health[j] <= 0) {
+					plane_remove(planes, j);	
+				};
+
 				hit = true;
 				proj_remove(proj, i);
 				break;
