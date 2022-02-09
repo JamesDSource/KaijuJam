@@ -58,9 +58,9 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	planes->positions[i] = (Vec2){0, 0};
 	planes->collider_sizes[i] = (Vec2){10, 10};
 	planes->velocities[i] = (PlaneVel){
-		.turn_accel = .5,
-		.max_turn = 4,
-		.speed = 5,
+		.turn_accel = 1,
+		.max_turn = 6,
+		.speed = 4,
 		.turn = 0,
 		.momentum = (Vec2){0, 0}
 	};
@@ -96,8 +96,7 @@ uint32_t	plane_get(Planes* planes, uint32_t id) {
 			return i;
 		}
 	}
-	printf("ERROR in plane_get: Plane with id %u not found\n", id);
-	exit(0);
+	return UINT32_MAX;
 }
 
 void planes_move(Planes* planes) {
@@ -105,7 +104,7 @@ void planes_move(Planes* planes) {
 		if((planes->flags[i] & PLANE_STATUS_NOTHRUST) != 0) {
 			planes->positions[i].x += planes->velocities[i].momentum.x;
 			planes->positions[i].y += (planes->velocities[i].momentum.y += GRAVITY);
-		} else {
+		} else if((planes->flags[i] & PLANE_STATUS_HOVER) == 0) {
 			PlaneVel* vel = planes->velocities + i;
 			float dir = planes->dirs[i];
 			Vec2 target = planes->targets[i];

@@ -4,12 +4,12 @@
 
 SDL_Texture* PROJECTILE_TEXTURES[PROJ_TYPE_COUNT] = {};
 float PROJECTILE_COL_RADIUS[PROJ_TYPE_COUNT] = {
-	2, 4
+	2, 3
 };
 
 void proj_init() {
 	PROJECTILE_TEXTURES[PROJ_TYPE_PLAYER] = load_texture("res/Bullet.png");
-	PROJECTILE_TEXTURES[PROJ_TYPE_ENEMY] = load_texture("res/EnemyBullet.png");
+	PROJECTILE_TEXTURES[PROJ_TYPE_DRAGFLY_FIRE] = load_texture("res/DragonflyFire.png");
 }
 
 void proj_free() {
@@ -99,11 +99,17 @@ void proj_check_collision(Projectiles* proj, Planes* planes) {
 		
 		// Checking for a hit on a plane
 		for(uint32_t j = planes->count - 1; j != UINT32_MAX; --j) {
+			if(
+				(planes->types[j] == PLANE_TYPE_PLAYER && proj->types[i] == PROJ_TYPE_PLAYER) ||
+				(planes->types[j] == PLANE_TYPE_DRAGONFLY && proj->types[i] == PROJ_TYPE_DRAGFLY_FIRE)
+			) {
+				continue;
+			}
+
 			Vec2 plane_pos = planes->positions[j];
 			Vec2 plane_size = planes->collider_sizes[j];
 			float plane_dir = planes->dirs[j];
 			if(collide_rect_and_circle(plane_pos, plane_size, plane_dir, proj_pos, proj_radius)) {
-				printf("Hit\n");
 				planes->health[j]--;	
 				if(planes->health[j] <= 0) {
 					plane_remove(planes, j);	
@@ -118,7 +124,6 @@ void proj_check_collision(Projectiles* proj, Planes* planes) {
 		if(hit) {
 			continue;
 		}
-
 
 	}
 }

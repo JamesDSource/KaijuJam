@@ -2,6 +2,7 @@
 #include<stdint.h>
 #include<math.h>
 #include"collisions.h"
+#include<stdio.h>
 
 bool collide_rect_and_rect(Vec2 pos1, Vec2 size1, float orient_rad1, Vec2 pos2, Vec2 size2, float orient_rad2) {
 	Vec2 verticies1[4] = {
@@ -89,45 +90,30 @@ bool collide_rect_and_circle(Vec2 rect_pos, Vec2 rect_size, float rect_orient, V
 		rect_pos.x + rect_size.x/2, rect_pos.y + rect_size.y/2,
 		rect_pos.x + rect_size.x/2, rect_pos.y - rect_size.y/2
 	};
+	//
 	// Rotate verticies
-	for(uint32_t i = 0; i < 4; ++i) {
-		float x1 = verticies[i].x - rect_pos.x;
-		float y1 = verticies[i].y - rect_pos.y;
+	if(rect_orient != 0) {
+		for(uint32_t i = 0; i < 4; ++i) {
+			float x1 = verticies[i].x - rect_pos.x;
+			float y1 = verticies[i].y - rect_pos.y;
 
-		float x2 = x1*cos(rect_orient) - y1*sin(rect_orient);
-		float y2 = x1*sin(rect_orient) + y1*cos(rect_orient);
+			float x2 = x1*cos(rect_orient) - y1*sin(rect_orient);
+			float y2 = x1*sin(rect_orient) + y1*cos(rect_orient);
 
-		verticies[i] = (Vec2){rect_pos.x + x2, rect_pos.y + y2};
-	}
-	
-	// Create the axis
-	Vec2 axes[4] = {
-		vec2_normalize((Vec2){verticies[1].x - verticies[0].x, verticies[1].y - verticies[0].y}),
-		vec2_normalize((Vec2){verticies[2].x - verticies[1].x, verticies[2].y - verticies[1].y}),
-	};
-
-	for(uint32_t i = 0; i < 4; ++i) {
-		Vec2 axis = axes[i];
-
-		float max1 = FLT_MIN;
-		float min1 = FLT_MAX;
-		for(uint32_t j = 0; j < 4; ++j) {
-				float projection = vec2_dot(verticies[j], axis);		
-
-				if(projection > max1) {
-					max1 = projection;
-				}
-				if(projection < min1) {
-					min1 = projection;
-				}
+			verticies[i] = (Vec2){rect_pos.x + x2, rect_pos.y + y2};
 		}
+	}
 
-		float max2 = vec2_dot((Vec2){circle_pos.x + circle_rad*axis.x, circle_pos.y + circle_rad*axis.y}, axis);
-		float min2 = vec2_dot((Vec2){circle_pos.x - circle_rad*axis.x, circle_pos.y - circle_rad*axis.y}, axis);
+	for(uint32_t i = 0; i < 4; ++i) {
+		Vec2 vertex = verticies[i];
+		Vec2 vertex_next = verticies[(i + 1)%4];
+		Vec2 edge_normal = vec2_normalize((Vec2){-(vertex_next.y - vertex.y), vertex_next.x - vertex.x});
 
-		if(min2 < max1 && min1 < max2) {
+		float s = vec2_dot(edge_normal, (Vec2){circle_pos.x - vertex.x, circle_pos.y - vertex.y});
+		if(s > circle_rad) {
 			return false;
 		}
 	}
+	
 	return true;
 }

@@ -6,7 +6,7 @@
 
 typedef enum {
 	PLANE_STATUS_NOTHRUST = 1,
-	PLANE_STATUS_DEAD = 2
+	PLANE_STATUS_HOVER = 2
 }PlaneStatusFlags;
 
 typedef enum {

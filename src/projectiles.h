@@ -8,7 +8,7 @@
 
 typedef enum {
 	PROJ_TYPE_PLAYER,
-	PROJ_TYPE_ENEMY,
+	PROJ_TYPE_DRAGFLY_FIRE,
 	PROJ_TYPE_COUNT
 }ProjectileTypes;
 
