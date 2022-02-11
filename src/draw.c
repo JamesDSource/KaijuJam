@@ -30,6 +30,7 @@ SDL_Texture** load_texture_strip(const char* path, uint32_t segments) {
 			SDL_TEXTUREACCESS_TARGET,
 			seg_w,
 			h);
+		assert(textures[i] != NULL);
 		SDL_Rect src_rect = {
 			.x = i*seg_w,
 			.y = 0,
@@ -68,7 +69,7 @@ void draw_texture(SDL_Texture* texture, int x, int y, char align[2], float rotat
 		case 'c':
 			texture_rect.y -= texture_rect.h/2;
 			break;
-		case 'd':
+		case 'b':
 		default:
 			break;
 	}

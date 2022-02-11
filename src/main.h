@@ -10,6 +10,8 @@
 #include<SDL2/SDL.h>
 #include<SDL2/SDL_ttf.h>
 
+#include"vec2.h"
+
 extern const uint32_t SCREEN_RES_W;
 extern const uint32_t SCREEN_RES_H;
 extern const uint32_t SCREEN_SIZE_W;
@@ -31,5 +33,12 @@ extern int mouse_screen_x;
 extern int mouse_screen_y;
 
 extern float camera_x, camera_y;
+
+extern uint32_t goose_health;
+extern float goose_x;
+extern const int GOOSE_HEIGHT;
+extern const Vec2 GOOSE_HURT_BOX;
+
+extern uint32_t dragonfly_count;
 
 #endif

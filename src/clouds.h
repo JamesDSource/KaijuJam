@@ -4,7 +4,7 @@
 #include<stdint.h>
 #include"vec2.h"
 
-#define CLOUD_COUNT 128
+#define CLOUD_COUNT 24
 #define CLOUD_MIN_HEIGHT 368
 
 typedef enum {

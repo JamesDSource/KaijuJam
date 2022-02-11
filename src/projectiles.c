@@ -112,6 +112,9 @@ void proj_check_collision(Projectiles* proj, Planes* planes) {
 			if(collide_rect_and_circle(plane_pos, plane_size, plane_dir, proj_pos, proj_radius)) {
 				planes->health[j]--;	
 				if(planes->health[j] <= 0) {
+					if(planes->types[j] == PLANE_TYPE_DRAGONFLY) {
+						dragonfly_count--;
+					}
 					plane_remove(planes, j);	
 				};
 
@@ -125,5 +128,14 @@ void proj_check_collision(Projectiles* proj, Planes* planes) {
 			continue;
 		}
 
+		// Checking for a hit on the goose
+		if(
+				proj->types[i] == PROJ_TYPE_PLAYER &&
+				goose_health > 0 && 
+				collide_rect_and_circle((Vec2){goose_x, LEVEL_HEIGHT - GOOSE_HEIGHT}, GOOSE_HURT_BOX, 0, proj_pos, proj_radius)
+		) {
+			goose_health--;
+			proj_remove(proj, i);
+		}
 	}
 }

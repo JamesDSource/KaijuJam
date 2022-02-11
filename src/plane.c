@@ -66,7 +66,7 @@ uint32_t plane_add(Planes* planes, uint32_t* index) {
 	};
 	planes->targets[i] = (Vec2){0, 0};
 	planes->flags[i] = 0;
-	planes->health[i] = 5;
+	planes->health[i] = 2;
 	
 	if(index != NULL) {
 		*index = i;
